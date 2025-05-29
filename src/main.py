@@ -1,7 +1,13 @@
-import pandas as pd
-import random
+import logging
+from database_config import informations_config_db
+from logs_config import setup_logging
 
-number_create = random.randint(10000, 99999)
-base_name = f'protocolo-{number_create}'
-txt_file = f'{base_name}.txt'
+setup_logging()
 
+def main():
+
+    logging.info('Iniciando captura de dados')
+    informations_config_db()
+
+if __name__ == "__main__":
+    main()

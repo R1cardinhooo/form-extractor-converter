@@ -1,28 +1,32 @@
-import sqlite3
-import pandas as pd
 import os
+import pandas as pd
+import sqlite3
+import random
+import logging
+from logs_config import setup_logging
 
-database_path = "database"
-path_db = os.path.join(database_path, "DataBase.db")
+setup_logging()
 
-teste = 'valor unitário'
+base_dir = os.path.dirname(__file__)
+csv_path = os.path.abspath(os.path.join(base_dir, '..', 'csv_file', 'dados.csv'))
+db_path = os.path.abspath(os.path.join(base_dir, '..', 'DataBase', 'database.db'))
 
-conn = sqlite3.connect('DataBase.db')
-cursor = conn.cursor()
+def informations_config_db():
+    if not os.path.exists(csv_path):
+        raise FileNotFoundError(f"CSV não encontrado: {csv_path}")
+    if not os.path.exists(db_path):
+        raise FileNotFoundError(f"Banco de dados não encontrado: {db_path}")
 
-cursor.execute(''' 
-    CREATE TABLE IF NOT EXISTS Formularios(
-    nome varchar(80),
-    email varchar(80),
-    data varchar(80),
-    processamento varchar(80)
-    )                              
-    ''')
+    df = pd.read_csv(csv_path, header=0)
 
-cursor.execute(f'''
-    INSERT INTO Formularios
-    VALUES {teste}
-               ''')
+    df = df[["Data", "Nome", "Telefone", "Tipo", "Endereco", "CEP", "Email"]]
+    df.columns = ["data", "nome", "telefone", "tipo", "endereco", "cep", "email"]
 
-conn.commit()
-conn.close()
+    df["protocolo"] = [str(random.randint(10000, 99999)) for _ in range(len(df))]
+    df["status"] = "Pendente"
+
+    conn = sqlite3.connect(db_path)
+    df.to_sql("FormsEntrada", conn, if_exists="append", index=False)
+    conn.close()
+
+    logging.info('Dados inseridos com sucesso!')
